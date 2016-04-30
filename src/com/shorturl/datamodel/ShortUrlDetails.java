@@ -5,7 +5,11 @@ package com.shorturl.datamodel;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
@@ -24,51 +28,64 @@ import javax.persistence.Table;
  * @author Pradeep Kumar
  */
 @Entity
-@Table(name = "link_details")
+@Table(name = "short_url_details")
 @NamedQueries({
+	// Find Queries
+		@NamedQuery(name = ShortUrlDetails.NamedQueries.FIND_BY_SHORTURL, query = "SELECT SUD FROM ShortUrlDetails SUD WHERE SUD.shortUrl = :shortUrl"),
+	// Increment Count Queries
 		@NamedQuery(name = ShortUrlDetails.NamedQueries.INCREMENT_VIEW_COUNT, query = "UPDATE ShortUrlDetails SUD SET SUD.viewCount = SUD.viewCount + 1 WHERE SUD.shortUrl = :shortUrl"),
-		@NamedQuery(name = ShortUrlDetails.NamedQueries.INCREMENT_CLICK_COUNT, query = "UPDATE ShortUrlDetails SUD SET SUD.targetClicks = SUD.targetClicks + 1 WHERE SUD.shortUrl = :shortUrl")})
+		@NamedQuery(name = ShortUrlDetails.NamedQueries.INCREMENT_ACTION_COMPLETED_COUNT, query = "UPDATE ShortUrlDetails SUD SET SUD.numActionCompleted = SUD.numActionCompleted + 1 WHERE SUD.shortUrl = :shortUrl")})
 public class ShortUrlDetails {
 
 	@Id
+	@Column(name = "short_url_id")
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private long shortUrlId;
+
 	@Column(name = "short_url")
 	private String shortUrl;
 
 	/**
-	 * Target URL for the banner
+	 * The page to be loaded in the iframe
 	 */
-	@Column(name = "lp_url")
+	@Column(name = "landing_page_url")
 	private String landingPageUrl;
-
-	/**
-	 * Landing Page (To be loaded in the iframe)
-	 */
-	@Column(name = "share_url")
-	private String shareUrl;
-
-	/**
-	 * The Title for the banner
-	 */
-	@Column(name = "banner_title")
-	private String bannerTitle;
-
-	/**
-	 * The Description for the Banner
-	 */
-	@Column(name = "banner_description")
-	private String bannerDescription;
 
 	/**
 	 * The page view count for the Landing Page
 	 */
 	@Column(name = "view_count")
-	private int viewCount = 0;
+	private long viewCount = 0;
 
 	/**
-	 * The number of clicks on the banner button
+	 * The number of intended actions completed from the bottom banner
 	 */
-	@Column(name = "target_clicks")
-	private int targetClicks = 0;
+	@Column(name = "num_action_completed")
+	private long numActionCompleted = 0;
+
+	/**
+	 * The JSON string for the action
+	 */
+	@Column(name = "action_json")
+	private String actionJson;
+
+	@ManyToOne
+	@JoinColumn(name = "userid", nullable = true)
+	private UserDetails userDetails;
+
+	/**
+	 * @return the shortUrlId
+	 */
+	public long getShortUrlId() {
+		return shortUrlId;
+	}
+
+	/**
+	 * @param shortUrlId the shortUrlId to set
+	 */
+	public void setShortUrlId(long shortUrlId) {
+		this.shortUrlId = shortUrlId;
+	}
 
 	/**
 	 * @return the linkId
@@ -101,53 +118,9 @@ public class ShortUrlDetails {
 	}
 
 	/**
-	 * @return the shareUrl
-	 */
-	public String getShareUrl() {
-		return shareUrl;
-	}
-
-	/**
-	 * @param shareUrl the shareUrl to set
-	 */
-	public void setShareUrl(String shareUrl) {
-		this.shareUrl = shareUrl;
-	}
-
-	/**
-	 * @return the bannerTitle
-	 */
-	public String getBannerTitle() {
-		return bannerTitle;
-	}
-
-	/**
-	 * @param bannerTitle
-	 *            the bannerTitle to set
-	 */
-	public void setBannerTitle(String bannerTitle) {
-		this.bannerTitle = bannerTitle;
-	}
-
-	/**
-	 * @return the bannerDescription
-	 */
-	public String getBannerDescription() {
-		return bannerDescription;
-	}
-
-	/**
-	 * @param bannerDescription
-	 *            the bannerDescription to set
-	 */
-	public void setBannerDescription(String bannerDescription) {
-		this.bannerDescription = bannerDescription;
-	}
-
-	/**
 	 * @return the viewCount
 	 */
-	public int getViewCount() {
+	public long getViewCount() {
 		return viewCount;
 	}
 
@@ -155,23 +128,50 @@ public class ShortUrlDetails {
 	 * @param viewCount
 	 *            the viewCount to set
 	 */
-	public void setViewCount(int viewCount) {
+	public void setViewCount(long viewCount) {
 		this.viewCount = viewCount;
 	}
 
 	/**
-	 * @return the targetClicks
+	 * @return the numActionCompleted
 	 */
-	public int getTargetClicks() {
-		return targetClicks;
+	public long getNumActionCompleted() {
+		return numActionCompleted;
 	}
 
 	/**
-	 * @param targetClicks
-	 *            the targetClicks to set
+	 * @param numActionCompleted the numActionCompleted to set
 	 */
-	public void setTargetClicks(int targetClicks) {
-		this.targetClicks = targetClicks;
+	public void setNumActionCompleted(long numActionCompleted) {
+		this.numActionCompleted = numActionCompleted;
+	}
+
+	/**
+	 * @return the actionJson
+	 */
+	public String getActionJson() {
+		return actionJson;
+	}
+
+	/**
+	 * @param actionJson the actionJson to set
+	 */
+	public void setActionJson(String actionJson) {
+		this.actionJson = actionJson;
+	}
+
+	/**
+	 * @return the userDetails
+	 */
+	public UserDetails getUserDetails() {
+		return userDetails;
+	}
+
+	/**
+	 * @param userDetails the userDetails to set
+	 */
+	public void setUserDetails(UserDetails userDetails) {
+		this.userDetails = userDetails;
 	}
 
 	/* (non-Javadoc)
@@ -179,9 +179,8 @@ public class ShortUrlDetails {
 	 */
 	@Override
 	public String toString() {
-		return "ShortUrlDetails [shortUrl=" + shortUrl + ", landingPageUrl=" + landingPageUrl + ", shareUrl="
-				+ shareUrl + ", bannerTitle=" + bannerTitle + ", bannerDescription=" + bannerDescription
-				+ ", viewCount=" + viewCount + ", targetClicks=" + targetClicks + "]";
+		return "ShortUrlDetails [shortUrl=" + shortUrl + ", landingPageUrl=" + landingPageUrl + ", viewCount="
+				+ viewCount + ", numActionCompleted=" + numActionCompleted + ", actionJson=" + actionJson + "]";
 	}
 
 	/**
@@ -190,8 +189,10 @@ public class ShortUrlDetails {
 	 * @author Pradeep Kumar
 	 */
 	public static class NamedQueries {
+		public static final String FIND_BY_SHORTURL = "ShortUrlDetails.FindByShortUrl";
+
 		public static final String INCREMENT_VIEW_COUNT = "ShortUrlDetails.IncrementViewCount";
-		public static final String INCREMENT_CLICK_COUNT = "ShortUrlDetails.IncrementTargetClick";
+		public static final String INCREMENT_ACTION_COMPLETED_COUNT = "ShortUrlDetails.IncrementActionCompleted";
 	}
 
 	/**
